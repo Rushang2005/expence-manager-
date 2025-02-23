@@ -110,6 +110,18 @@
             color: yellow;
             margin-top: 10px;
         }
+        #shareButton {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #shareButton:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -118,15 +130,20 @@
         <input type="number" id="amount" placeholder="Enter Amount">
         <input type="text" id="description" placeholder="Enter Description">
         <button id="addExpenseBtn">Add Expense</button>
-        <button onclick="window.print();">Download Report</button>
+        <button onclick="downloadReport()">Download Report</button>
+        <button onclick="printReport()">Print Report</button>
+        
         <div class="expense-list" id="expenses"></div>
+        
         <h3>Set Wallet Limit</h3>
-        <input type="number" id="waterLimit" placeholder="Enter Water Limit" oninput="updateWaterBar()">
+        <input type="number" id="waterLimit" placeholder="Enter Wallet Limit" oninput="updateWaterBar()">
         <div class="water-bar-container">
             <div class="water-bar" id="waterBar"></div>
         </div>
         <div class="wallet-info" id="walletInfo">Remaining Amount: ₹0</div>
         <div id="warningMessage"></div>
+        
+        <button id="shareButton">Share Expenses</button>
     </div>
 
     <script>
@@ -144,6 +161,7 @@
         function addExpense() {
             const amount = parseFloat(document.getElementById('amount').value);
             const description = document.getElementById('description').value;
+            const date = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
             
             if (amount <= 0 || isNaN(amount)) {
                 alert("Please enter a valid positive amount.");
@@ -155,7 +173,7 @@
                 return;
             }
 
-            const expense = { amount, description, date: new Date().toLocaleDateString() };
+            const expense = { amount, description, date };
             expenses.push(expense);
             localStorage.setItem('expenses', JSON.stringify(expenses));
             updateExpenseList();
@@ -258,6 +276,40 @@
                 csv += row.join(',') + '\n';
             });
             return csv;
+        }
+
+        document.getElementById('shareButton').addEventListener('click', shareExpenses);
+
+        function shareExpenses() {
+            const expenses = JSON.parse(localStorage.getItem('expenses')) || {};
+            let shareData = 'My Expenses:\n\n';
+
+            expenses.forEach((expense, index) => {
+                shareData += `${index + 1}. Date: ${expense.date}, Description: ${expense.description}, Amount: ₹${expense.amount}\n`;
+            });
+
+            // Share via WhatsApp
+            const whatsappMessage = encodeURIComponent(shareData);
+            const whatsappUrl = `https://api.whatsapp.com/send?text=${whatsappMessage}`;
+            window.open(whatsappUrl, '_blank');
+
+            // Fallback for email sharing
+            const emailBody = encodeURIComponent(shareData);
+            const emailSubject = encodeURIComponent("My Expense Report");
+            const emailUrl = `mailto:?subject=${emailSubject}&body=${emailBody}`;
+            window.open(emailUrl, '_blank');
+        }
+
+        function printReport() {
+            const printContent = document.getElementById('expenses').innerHTML;
+            const printWindow = window.open('', '', 'height=400,width=600');
+            printWindow.document.write('<html><head><title>Print Report</title>');
+            printWindow.document.write('</head><body>');
+            printWindow.document.write('<h2>Expense Report</h2>');
+            printWindow.document.write(printContent);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.print();
         }
     </script>
     <footer>
