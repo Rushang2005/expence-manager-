@@ -5,26 +5,107 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Expense Tracker</title>
     <style>
-        body { font-family: Arial, sans-serif; background: linear-gradient(to right, #121212, #1e1e1e); color: #fff; text-align: center; padding: 20px; }
-        .container { max-width: 400px; margin: auto; background: linear-gradient(to right, #2a2a2a, #1e1e1e); padding: 20px; border-radius: 10px; }
-        input, button { width: 100%; margin: 10px 0; padding: 10px; border-radius: 5px; border: none; }
-        input { background: linear-gradient(to right, #3a3a3a, #2a2a2a); color: white; }
-        button { background: linear-gradient(to right, #4CAF50, #45a049); color: white; cursor: pointer; box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5); transform: translateY(2px); transition: all 0.2s; }
-        button:hover { background: linear-gradient(to right, #45a049, #4CAF50); transform: translateY(0px); }
-        .expense-list { text-align: left; margin-top: 10px; }
-        .expense-item { padding: 5px; border-bottom: 1px solid #444; display: flex; justify-content: space-between; align-items: center; }
-        .edit-btn, .delete-btn { background: linear-gradient(to right, orange, darkorange); color: white; border: none; padding: 5px 10px; cursor: pointer; box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5); transform: translateY(2px); transition: all 0.2s; }
-        .delete-btn { background: linear-gradient(to right, red, darkred); }
-        .delete-btn:hover { background: linear-gradient(to right, darkred, red); }
-        .edit-btn:hover { background: linear-gradient(to right, darkorange, orange); }
-        .water-bar-container { width: 100%; height: 100px; background: linear-gradient(to right, #222, #333); position: relative; overflow: hidden; border-radius: 10px; margin-top: 20px; }
-        .water-bar { width: 100%; position: absolute; bottom: 0; transition: height 0.5s ease-in-out, background 0.5s; animation: wave 2s infinite linear; }
+        body { 
+            font-family: Arial, sans-serif; 
+            background: linear-gradient(to right, #121212, #1e1e1e); 
+            color: #fff; 
+            text-align: center; 
+            padding: 20px; 
+        }
+        .container { 
+            max-width: 400px; 
+            margin: auto; 
+            background: linear-gradient(to right, #2a2a2a, #1e1e1e); 
+            padding: 20px; 
+            border-radius: 10px; 
+        }
+        input, button { 
+            width: 100%; 
+            margin: 10px 0; 
+            padding: 10px; 
+            border-radius: 5px; 
+            border: none; 
+        }
+        input { 
+            background: linear-gradient(to right, #3a3a3a, #2a2a2a); 
+            color: white; 
+        }
+        button { 
+            background: linear-gradient(to right, #4CAF50, #45a049); 
+            color: white; 
+            cursor: pointer; 
+            box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5); 
+            transform: translateY(2px); 
+            transition: all 0.2s; 
+        }
+        button:hover { 
+            background: linear-gradient(to right, #45a049, #4CAF50); 
+            transform: translateY(0px); 
+        }
+        .expense-list { 
+            text-align: left; 
+            margin-top: 10px; 
+        }
+        .expense-item { 
+            padding: 10px; /* Increased padding for better spacing */
+            border-bottom: 1px solid #444; 
+            display: flex; 
+            flex-direction: column; /* Stack items vertically */
+            align-items: flex-start; /* Align items to the start (left) */
+            font-size: 16px; /* Increased font size for better visibility */
+            line-height: 1.5; /* Added line-height for better text spacing */
+        }
+        .expense-item .buttons {
+            display: flex; 
+            justify-content: flex-start; /* Align buttons to the left */
+            gap: 10px; /* Space between the buttons */
+            margin-top: 10px; /* Space above the buttons */
+        }
+        .edit-btn, .delete-btn { 
+            background: linear-gradient(to right, orange, darkorange); 
+            color: white; 
+            border: none; 
+            padding: 5px 10px; 
+            cursor: pointer; 
+            box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5); 
+            transform: translateY(2px); 
+            transition: all 0.2s; 
+        }
+        .delete-btn { 
+            background: linear-gradient(to right, red, darkred); 
+        }
+        .delete-btn:hover { 
+            background: linear-gradient(to right, darkred, red); 
+        }
+        .edit-btn:hover { 
+            background: linear-gradient(to right, darkorange, orange); 
+        }
+        .water-bar-container { 
+            width: 100%; 
+            height: 100px; 
+            background: linear-gradient(to right, #222, #333); 
+            position: relative; 
+            overflow: hidden; 
+            border-radius: 10px; 
+            margin-top: 20px; 
+        }
+        .water-bar { 
+            width: 100%; 
+            position: absolute; 
+            bottom: 0; 
+            transition: height 0.5s ease-in-out, background 0.5s; 
+            animation: wave 2s infinite linear; 
+        }
         @keyframes wave {
             0% { transform: translateY(0px); }
             50% { transform: translateY(-5px); }
             100% { transform: translateY(0px); }
         }
-        .wallet-info { margin-top: 10px; font-size: 18px; color: #4CAF50; }
+        .wallet-info { 
+            margin-top: 10px; 
+            font-size: 18px; 
+            color: #4CAF50; 
+        }
     </style>
 </head>
 <body>
@@ -32,10 +113,10 @@
         <h2>Daily Expense Tracker</h2>
         <input type="number" id="amount" placeholder="Enter Amount">
         <input type="text" id="description" placeholder="Enter Description">
-        <button onclick="addExpense()">Add Expense</button>
+        <button id="addExpenseBtn">Add Expense</button>
         <button onclick="downloadReport()">Download Report</button>
         <div class="expense-list" id="expenses"></div>
-        <h3>Set wallet Limit</h3>
+        <h3>Set Wallet Limit</h3>
         <input type="number" id="waterLimit" placeholder="Enter Water Limit" oninput="updateWaterBar()">
         <div class="water-bar-container">
             <div class="water-bar" id="waterBar"></div>
@@ -53,6 +134,9 @@
             document.getElementById('waterLimit').value = waterLimit; // Set initial value of water limit input
             updateWaterBar();
         });
+
+        // Add event listener to Add Expense button
+        document.getElementById('addExpenseBtn').addEventListener('click', addExpense);
 
         function addExpense() {
             const amount = document.getElementById('amount').value;
@@ -72,9 +156,11 @@
             const expenseList = document.getElementById('expenses');
             expenseList.innerHTML = expenses.map((e, i) => 
                 `<div class='expense-item'>
-                    ${i + 1}. ${e.date} - <span id='desc-${i}'>${e.description}</span>: ₹<span id='amt-${i}'>${e.amount}</span>
-                    <button class='edit-btn' onclick='editExpense(${i})'>Edit</button>
-                    <button class='delete-btn' onclick='deleteExpense(${i})'>Delete</button>
+                    <div>${i + 1}. ${e.date} - <span id='desc-${i}'>${e.description}</span>: ₹<span id='amt-${i}'>${e.amount}</span></div>
+                    <div class='buttons'>
+                        <button class='edit-btn' onclick='editExpense(${i})'>Edit</button>
+                        <button class='delete-btn' onclick='deleteExpense(${i})'>Delete</button>
+                    </div>
                 </div>`).join('');
         }
 
@@ -130,6 +216,32 @@
             localStorage.setItem('waterLimit', waterLimit);
             updateWaterBar();
         });
+
+        // Download expenses as CSV
+        function downloadReport() {
+            const expensesCsv = generateCsv(expenses);
+            const blob = new Blob([expensesCsv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'expenses_report.csv';
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function generateCsv(expenses) {
+            const header = ['Date', 'Description', 'Amount'];
+            const rows = expenses.map(expense => [expense.date, expense.description, expense.amount]);
+
+            let csv = header.join(',') + '\n';
+            rows.forEach(row => {
+                csv += row.join(',') + '\n';
+            });
+            return csv;
+        }
     </script>
+    <footer>
+      <p>All writes reserved by @Rushang Jagtap</p>
+    </footer>
 </body>
 </html>
