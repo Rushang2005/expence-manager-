@@ -5,32 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Expense Tracker</title>
     <style>
-        body { font-family: Arial, sans-serif; background: linear-gradient(to right, #121212, #1e1e1e); color: #fff; text-align: center; padding: 20px; transition: background 0.5s, color 0.5s; }
-        .container { max-width: 600px; margin: auto; background: linear-gradient(to right, #2a2a2a, #1e1e1e); padding: 20px; border-radius: 10px; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(to right, #121212, #1e1e1e); color: #fff; text-align: center; padding: 20px; }
+        .container { max-width: 400px; margin: auto; background: linear-gradient(to right, #2a2a2a, #1e1e1e); padding: 20px; border-radius: 10px; }
         input, button { width: 100%; margin: 10px 0; padding: 10px; border-radius: 5px; border: none; }
         input { background: linear-gradient(to right, #3a3a3a, #2a2a2a); color: white; }
         button { background: linear-gradient(to right, #4CAF50, #45a049); color: white; cursor: pointer; box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5); transform: translateY(2px); transition: all 0.2s; }
         button:hover { background: linear-gradient(to right, #45a049, #4CAF50); transform: translateY(0px); }
-        .expense-list { text-align: left; margin-top: 10px; max-height: 300px; overflow-y: auto; }
-        .expense-item { padding: 10px; border-bottom: 1px solid #444; display: flex; justify-content: space-between; align-items: center; }
+        .expense-list { text-align: left; margin-top: 10px; }
+        .expense-item { padding: 5px; border-bottom: 1px solid #444; display: flex; justify-content: space-between; align-items: center; }
+        .edit-btn, .delete-btn { background: linear-gradient(to right, orange, darkorange); color: white; border: none; padding: 5px 10px; cursor: pointer; box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5); transform: translateY(2px); transition: all 0.2s; }
+        .delete-btn { background: linear-gradient(to right, red, darkred); }
+        .delete-btn:hover { background: linear-gradient(to right, darkred, red); }
+        .edit-btn:hover { background: linear-gradient(to right, darkorange, orange); }
         .water-bar-container { width: 100%; height: 100px; background: linear-gradient(to right, #222, #333); position: relative; overflow: hidden; border-radius: 10px; margin-top: 20px; }
-        .water-bar { width: 100%; position: absolute; bottom: 0; transition: height 0.5s ease-in-out, background 0.5s; }
-        .delete-btn { background: linear-gradient(to right, #ff4d4d, #cc0000); }
-        .delete-btn:hover { background: linear-gradient(to right, #cc0000, #ff4d4d); }
-        .edit-btn { background: linear-gradient(to right, yellow, orange); }
-        .edit-btn:hover { background: linear-gradient(to right, orange, yellow); }
-        .light-mode { background: linear-gradient(to right, #ffffff, #f0f0f0); color: #000; }
-        .light-mode .container { background: linear-gradient(to right, #ffffff, #e0e0e0); }
-        .light-mode input { background: linear-gradient(to right, #ffffff, #e0e0e0); color: black; }
-        .light-mode button { background: linear-gradient(to right, #008CBA, #007bb5); }
-        .light-mode button:hover { background: linear-gradient(to right, #007bb5, #008CBA); }
+        .water-bar { width: 100%; position: absolute; bottom: 0; transition: height 0.5s ease-in-out, background 0.5s; animation: wave 2s infinite linear; }
+        @keyframes wave {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
+        }
+        .wallet-info { margin-top: 10px; font-size: 18px; color: #4CAF50; }
     </style>
 </head>
-<body onload="loadExpenses()">
-    <button class="toggle-btn" onclick="toggleMode()">Toggle Mode</button>
+<body>
     <div class="container">
         <h2>Daily Expense Tracker</h2>
-        <input type="number" id="amount" placeholder="Enter Amount" min="1">
+        <input type="number" id="amount" placeholder="Enter Amount">
         <input type="text" id="description" placeholder="Enter Description">
         <button onclick="addExpense()">Add Expense</button>
         <button onclick="downloadReport()">Download Report</button>
@@ -42,80 +42,71 @@
         </div>
         <div class="wallet-info" id="walletInfo">Remaining Amount: ₹0</div>
     </div>
+
     <script>
-        let totalBalance = 1000;
-        let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
-        
-        function toggleMode() {
-            document.body.classList.toggle('light-mode');
-        }
-
+        const expenses = [];
+        let waterLimit = 100;
         function addExpense() {
-            let amount = parseFloat(document.getElementById('amount').value);
-            let description = document.getElementById('description').value.trim();
-            let date = new Date().toLocaleDateString();
-            if (isNaN(amount) || amount < 1) return alert('Please enter a valid amount greater than zero.');
-            if (!description) return alert('Please enter a description.');
-            
-            expenses.push({ amount, description, date });
-            totalBalance -= amount;
-            localStorage.setItem('expenses', JSON.stringify(expenses));
-            document.getElementById('amount').value = "";
-            document.getElementById('description').value = "";
-            updateUI();
+            const amount = document.getElementById('amount').value;
+            const description = document.getElementById('description').value;
+            if (amount && description) {
+                const expense = { amount, description, date: new Date().toLocaleDateString() };
+                expenses.push(expense);
+                updateExpenseList();
+                document.getElementById('amount').value = '';
+                document.getElementById('description').value = '';
+                updateWaterBar();
+            }
         }
-
-        function updateUI() {
-            let expenseList = document.getElementById('expenses');
-            let walletInfo = document.getElementById('walletInfo');
-            expenseList.innerHTML = '';
-            expenses.forEach((expense, index) => {
-                expenseList.innerHTML += `<div class='expense-item'>
-                    ${expense.date} - ${expense.description}: ₹${expense.amount} 
-                    <button class='edit-btn' onclick='editExpense(${index})'>Edit</button>
-                    <button class='delete-btn' onclick='deleteExpense(${index})'>Delete</button>
-                </div>`;
-            });
-            walletInfo.innerText = `Remaining Amount: ₹${totalBalance}`;
+        function updateExpenseList() {
+            const expenseList = document.getElementById('expenses');
+            expenseList.innerHTML = expenses.map((e, i) => 
+                `<div class='expense-item'>
+                    ${i + 1}. ${e.date} - <span id='desc-${i}'>${e.description}</span>: ₹<span id='amt-${i}'>${e.amount}</span>
+                    <button class='edit-btn' onclick='editExpense(${i})'>Edit</button>
+                    <button class='delete-btn' onclick='deleteExpense(${i})'>Delete</button>
+                </div>`).join('');
+        }
+        function editExpense(index) {
+            const newAmount = prompt("Enter new amount:", expenses[index].amount);
+            const newDescription = prompt("Enter new description:", expenses[index].description);
+            if (newAmount !== null && newDescription !== null) {
+                expenses[index].amount = newAmount;
+                expenses[index].description = newDescription;
+                updateExpenseList();
+                updateWaterBar();
+            }
+        }
+        function deleteExpense(index) {
+            expenses.splice(index, 1);
+            updateExpenseList();
             updateWaterBar();
         }
-
-        function deleteExpense(index) {
-            totalBalance += expenses[index].amount;
-            expenses.splice(index, 1);
-            localStorage.setItem('expenses', JSON.stringify(expenses));
-            updateUI();
-        }
-
-        function editExpense(index) {
-            let newAmount = prompt("Enter new amount:", expenses[index].amount);
-            let newDescription = prompt("Enter new description:", expenses[index].description);
-            if (newAmount !== null && newDescription !== null) {
-                totalBalance += expenses[index].amount;
-                expenses[index].amount = parseFloat(newAmount);
-                expenses[index].description = newDescription;
-                totalBalance -= expenses[index].amount;
-                localStorage.setItem('expenses', JSON.stringify(expenses));
-                updateUI();
-            }
-        }
-
         function updateWaterBar() {
-            let waterLimit = parseFloat(document.getElementById('waterLimit').value) || 100;
-            let spentPercentage = ((1000 - totalBalance) / waterLimit) * 100;
-            let waterBar = document.getElementById('waterBar');
-            if (spentPercentage <= 70) {
-                waterBar.style.background = "linear-gradient(to top, #4CAF50, #2196F3)";
-            } else if (spentPercentage > 70 && spentPercentage < 90) {
-                waterBar.style.background = "linear-gradient(to top, yellow, orange)";
+            const waterBar = document.getElementById('waterBar');
+            const walletInfo = document.getElementById('walletInfo');
+            const limit = document.getElementById('waterLimit').value || waterLimit;
+            const totalExpense = expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
+            let height = (totalExpense / limit) * 100;
+            let remainingAmount = limit - totalExpense;
+            
+            if (height > 100) {
+                height = 100;
+                waterBar.style.background = 'linear-gradient(to top, red, darkred)';
+                remainingAmount = 0;
+                alert("100% of your budget is spent!");
+            } else if (height >= 90) {
+                waterBar.style.background = 'linear-gradient(to top, red, darkred)';
+                alert("90% of your budget is spent!");
+            } else if (height >= 70) {
+                waterBar.style.background = 'linear-gradient(to top, yellow, orange)';
+                alert("70% of your budget is spent!");
             } else {
-                waterBar.style.background = "linear-gradient(to top, red, darkred)";
+                waterBar.style.background = 'linear-gradient(to top, blue, lightblue)';
             }
-            waterBar.style.height = spentPercentage > 100 ? "100%" : spentPercentage + "%";
-        }
-
-        function loadExpenses() {
-            updateUI();
+            
+            waterBar.style.height = height + '%';
+            walletInfo.innerText = `Remaining Amount: ₹${remainingAmount}`;
         }
     </script>
 </body>
