@@ -35,7 +35,7 @@
         <button onclick="addExpense()">Add Expense</button>
         <button onclick="downloadReport()">Download Report</button>
         <div class="expense-list" id="expenses"></div>
-        <h3>Set Water Limit</h3>
+        <h3>Set wallet Limit</h3>
         <input type="number" id="waterLimit" placeholder="Enter Water Limit" oninput="updateWaterBar()">
         <div class="water-bar-container">
             <div class="water-bar" id="waterBar"></div>
@@ -44,20 +44,30 @@
     </div>
 
     <script>
-        const expenses = [];
-        let waterLimit = 100;
+        let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+        let waterLimit = localStorage.getItem('waterLimit') || 100;
+
+        // Load expenses and waterLimit from localStorage on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateExpenseList();
+            document.getElementById('waterLimit').value = waterLimit; // Set initial value of water limit input
+            updateWaterBar();
+        });
+
         function addExpense() {
             const amount = document.getElementById('amount').value;
             const description = document.getElementById('description').value;
             if (amount && description) {
                 const expense = { amount, description, date: new Date().toLocaleDateString() };
                 expenses.push(expense);
+                localStorage.setItem('expenses', JSON.stringify(expenses)); // Save expenses to localStorage
                 updateExpenseList();
                 document.getElementById('amount').value = '';
                 document.getElementById('description').value = '';
                 updateWaterBar();
             }
         }
+
         function updateExpenseList() {
             const expenseList = document.getElementById('expenses');
             expenseList.innerHTML = expenses.map((e, i) => 
@@ -67,21 +77,26 @@
                     <button class='delete-btn' onclick='deleteExpense(${i})'>Delete</button>
                 </div>`).join('');
         }
+
         function editExpense(index) {
             const newAmount = prompt("Enter new amount:", expenses[index].amount);
             const newDescription = prompt("Enter new description:", expenses[index].description);
             if (newAmount !== null && newDescription !== null) {
                 expenses[index].amount = newAmount;
                 expenses[index].description = newDescription;
+                localStorage.setItem('expenses', JSON.stringify(expenses)); // Save to localStorage
                 updateExpenseList();
                 updateWaterBar();
             }
         }
+
         function deleteExpense(index) {
             expenses.splice(index, 1);
+            localStorage.setItem('expenses', JSON.stringify(expenses)); // Save to localStorage
             updateExpenseList();
             updateWaterBar();
         }
+
         function updateWaterBar() {
             const waterBar = document.getElementById('waterBar');
             const walletInfo = document.getElementById('walletInfo');
@@ -108,6 +123,13 @@
             waterBar.style.height = height + '%';
             walletInfo.innerText = `Remaining Amount: ₹${remainingAmount}`;
         }
+
+        // Save water limit to localStorage when it's updated
+        document.getElementById('waterLimit').addEventListener('input', function() {
+            waterLimit = this.value;
+            localStorage.setItem('waterLimit', waterLimit);
+            updateWaterBar();
+        });
     </script>
 </body>
 </html>
